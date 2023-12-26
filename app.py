@@ -1,7 +1,7 @@
-from typing import Union
 from fastapi import FastAPI
 from backend.redis_db import *
 
+# App Route
 app = FastAPI()
 
 # Dummy Route
@@ -36,4 +36,3 @@ async def authenticate_user(user_id:str,password:str):
         msg = record.password == password
 
     return {"data":msg}
-        
