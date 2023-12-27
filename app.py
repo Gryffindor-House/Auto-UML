@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 from backend.redis_db import *
+import json
+
+# Import Models
+from backend.models import *
 
 # App Route
 app = FastAPI()
@@ -9,30 +13,36 @@ app = FastAPI()
 def read_root():
     return {"Hello": "World"}
 
-@app.post("/insert_record")
-async def insert_record(user_id:str,username:str,password:str):
-    db.hset(user_id,mapping={'username':username,'password':password})
-    return {"Hello":"World"}
+# Save Session Record
+@app.post("/save_session")
+async def save_session(session_id:str,session:Session):
+    db.set(session_id,str(session.json()))
 
-@app.get("/get_record")
-async def get_record(user_id:str):
-    record = db.hgetall(user_id)
+# Load Session
+@app.get("/get_session")
+async def get_session(session_id:str):
+    record = db.get(session_id)
     if(record == None):
-        return {"error":"user not present"}
+        return 200,{"error":"Record Not Present"}
     print(record)
-    return {"record":record.username}
+    return json.loads(record)
 
-@app.post("/delete_record")
-async def delete_record(user_id:str):
-    db.delete(user_id)
+# Clear Data
+@app.post("/delete")
+async def delete_record(session_id:str):
+    db.delete(session_id)
 
-@app.post("/authenticate_user")
-async def authenticate_user(user_id:str,password:str):
-    record = db.hgetall(user_id)
-    msg = ""
-    if(record == None):
-        return 200,{"error":"account not present"}
-    else:
-        msg = record.password == password
+####### AUTHENTICATION ROUTES ########
+    
+# Register User
+@app.post("/register")
+async def register_user(user:User):
+    db.set(user.email_id,str(user.json()))
 
-    return {"data":msg}
+# Authenticate User
+@app.post("/authenticate")
+async def authenticate_user(email_id:str,password:str):
+    user_record = json.loads(db.get(email_id))
+    if(user_record.password == password):
+        return 400,{"msg":"authenticate success"}
+    return 400,{"msg":'credentials not valid',"code":200}
