@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from backend.redis_db import *
 import json
 
@@ -8,6 +9,23 @@ from backend.models import *
 # App Route
 app = FastAPI()
 
+# Add the dev url of front end
+origins = [
+    "localhost:8000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://127.0.0.1:5173"
+]
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Dummy Route
 @app.get("/")
 def read_root():
@@ -16,7 +34,11 @@ def read_root():
 # Save Session Record
 @app.post("/save_session")
 async def save_session(session_id:str,session:Session):
-    db.set(session_id,str(session.json()))
+    try:
+        db.set(session_id,str(session.json()))
+        return {"status":"ok","message":"session saved successfully","userid":session_id}
+    except:
+        return {"status":"NOK","message":"server error"}
 
 # Load Session
 @app.get("/get_session")
@@ -24,13 +46,13 @@ async def get_session(session_id:str):
     record = db.get(session_id)
     if(record == None):
         return 200,{"error":"Record Not Present"}
-    print(record)
     return json.loads(record)
 
 # Clear Data
 @app.post("/delete")
 async def delete_record(session_id:str):
     db.delete(session_id)
+    return {"status":"ok","message":"record deleted successfully"}
 
 ####### AUTHENTICATION ROUTES ########
     
