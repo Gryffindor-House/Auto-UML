@@ -48,7 +48,7 @@ class Edges(BaseModel):
 
 # Graph Object
 class Graph(BaseModel):
-    nodes:Union[List[Node],None] = None
+    nodes:Union[List[Node],None] = []
     edges:Union[List[Edges],None] = None
     viewport:ViewPort
 
