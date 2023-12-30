@@ -3,32 +3,57 @@ from pydantic import BaseModel
 
 # Create Models with BaseModel as a parent class
 
+# Position Object
+class Position(BaseModel):
+    x:float
+    y:float
 
+# Style Object
+class Style(BaseModel):
+    width:int
+    height:int
+
+# Node Data
+class NodeData(BaseModel):
+    label:str
 
 # Node Object
 class Node(BaseModel):
     id:str
     type:str
-    label:str
-    pos_x:int
-    pos_y:int
+    data:Union[NodeData,None] = None
+    width:int
+    height:int
+    position:Position
+    resizing:bool = True
+    selected:bool = False
+    dragging:bool = False
+    positionAbsolute:Position
+    style:Union[Style,None] = None
+    
+
+# ViewPort Object
+class ViewPort(BaseModel):
+    x:float
+    y:float
+    zoom:int =2
 
 # Connection Object
-class Connection(BaseModel):
-    conn_id:str
+class Edges(BaseModel):
+    id:str
     source:str
-    destination:str
+    sourceHandle:str
+    target:str
+    targetHandle:str
 
 # Graph Object
 class Graph(BaseModel):
-    graph_type:str
     nodes:List[Node]
-    description:Union[None,str]=None
-    connections:Union[List[Connection],None] = None
+    edges:Union[List[Edges],None] = None
+    viewport:ViewPort
 
 # Session Object
 class Session(BaseModel):
-    user_id:str
     graph:Graph
 
 # User Details
