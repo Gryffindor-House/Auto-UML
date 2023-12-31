@@ -1,7 +1,8 @@
+# Env files
 *.env
 
+# Python virtual environment files
 .venv/
 
+# Pycache folders
 __pycache__/
-
-backend/
