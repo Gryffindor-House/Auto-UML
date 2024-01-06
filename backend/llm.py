@@ -56,10 +56,17 @@ class UseCase:
     #print(kw_extractor.extract_keywords(formatted_text))
 
     keywords = kw_extractor.extract_keywords(formatted_text)
-    print(keywords)
+    #print(keywords)
 
     ## Search for the diagram
-    
+    diagrams = ['use case']
+
+    for diagram in diagrams:
+      kws = list(filter(lambda x: diagram in x[0],keywords))
+      if(len(kws)>0):
+        print(diagram)
+        break
+
 
     #diagram_type = list(filter(lambda x:))
 
