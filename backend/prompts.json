@@ -1,0 +1,10 @@
+[
+  {
+    "id": 1,
+    "prompt": "Generate Use Case Diagram*&^ for Bus Management Diagram"
+  },
+  {
+    "id": 2,
+    "prompt": "Generate Use Case Diagram for Train Management System inclusion of certain actions"
+  }
+]

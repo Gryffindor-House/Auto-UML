@@ -35,7 +35,8 @@ def read_root():
 @app.post("/save_session")
 async def save_session(session_id:str,session:Session):
     try:
-        db.set(session_id,str(session.json()))
+        db.set(session_id,mapping=session.json())
+        #db.set(session_id,str(session.json()))
         return {"status":"ok","message":"session saved successfully","userid":session_id}
     except:
         return {"status":"NOK","message":"server error"}
