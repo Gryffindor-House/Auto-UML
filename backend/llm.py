@@ -16,9 +16,6 @@ from nltk.corpus import stopwords
 import json
 import warnings
 
-import yake
-kw_extractor = yake.KeywordExtractor(dedupLim=float(os.getenv("DUPLICATION_THRESHOLD")))
-
 openai = OpenAI(api_key=os.getenv("OPEN_AI_KEY"))
 
 # Download Corpus
