@@ -1,3 +1,18 @@
 {
-  "diagrams": { "use_case": ["use", "case", "use case", "use_case"] }
+  "templates": {
+    "common": {
+      "problem_statement": "give me just the name of the system only for which diagram has to be illustrated, {USERPROMPT}'. give just the name",
+      "uml_diagram": "give me just the name of the uml diagram {USERPROMPT}. respond with the name of the uml diagram alone"
+    },
+    "use_case": {
+      "actors": "Give me just the names of actors alone for use case of {PROJECT} for UML diagram"
+    },
+    "activity": {
+      "actors": "Give me just the names of actors alone for activity diagram of {PROJECT} for UML diagram"
+    }
+  },
+  "diagrams": {
+    "use_case": { "synonyms": ["use", "case", "use case", "use case diagram"] },
+    "activity": { "synonyms": ["use", "case", "use case"] }
+  }
 }
