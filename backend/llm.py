@@ -142,11 +142,10 @@ class UseCase():
 
 					node_data = {
 							"id": node_id,
-							"label": actor_name,
 							"dragging": False,
 							"height": 130,
 							"data": {
-									"label": "Added node"
+									"label": actor_name
 							},
 							"position": position,
 							"positionAbsolute": position,
