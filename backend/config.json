@@ -5,7 +5,7 @@
       "uml_diagram": "give me just the name of the uml diagram {USERPROMPT}. respond with the name of the uml diagram alone"
     },
     "use_case": {
-      "actors": "Give me just the names of actors alone for use case of {PROJECT} for UML diagram"
+      "actors": "Give me just the names of actors alone for use case of {PROJECT} for UML diagram. only the actors for the uml diagram"
     },
     "activity": {
       "actors": "Give me just the names of actors alone for activity diagram of {PROJECT} for UML diagram"

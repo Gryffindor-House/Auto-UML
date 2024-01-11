@@ -16,6 +16,8 @@ from nltk.corpus import stopwords
 import json
 import warnings
 
+from backend.models import *
+
 openai = OpenAI(api_key=os.getenv("OPEN_AI_KEY"))
 
 # Download Corpus
@@ -29,17 +31,24 @@ class Diagram():
 	# Prompt Json
 	prompt_json = {}
 
+	# Diagram 
+
 	def __init__(self,user_text):
 		self.raw_text = user_text
 
 		# Load Prompts
 		self.load_prompts()
 
-		# Generate data object
+		# Generate Graph Instance
+		self.graph = Graph(nodes=[],edges=[],viewport=ViewPort(x=302.8159235862322, y=-94.66986803311238))
+
+
+	def generate_graph(self):
 		self.generate_data_obj()
+		return self.graph
 
 	def load_prompts(self):
-		with open("./config.json","r+") as f:
+		with open("./backend/config.json","r+") as f:
 				self.prompt_json = json.load(f)
 
 	def fetch_diagram(self):
@@ -84,16 +93,20 @@ class Diagram():
 
 		# Assign Class Instance
 		if(self.data_obj['uml_diagram'] == 'use_case' ):
-			self.class_inst = UseCase(self.data_obj)
+			self.class_inst = UseCase(self.data_obj,self.graph)
 
-		self.class_inst.generate()
-		pass
+		self.graph = self.class_inst.generate()
+
+
 
 class UseCase():
 	prompt_json = None
-	def __init__(self,data_obj):
+	def __init__(self,data_obj,graph_inst):
 		# Assignment data object
 		self.data_obj = data_obj
+
+		# Assignment of Graph Instance
+		self.graph = graph_inst
 
 		# Load prompts
 		self.load_prompts()
@@ -101,10 +114,10 @@ class UseCase():
 	def generate(self):
 		# Generate Actor Nodes
 		self.extract_node_components()
-		print(self.nodes)
+		return self.graph
 
 	def load_prompts(self):
-		with open("./config.json","r+") as f:
+		with open("./backend/config.json","r+") as f:
 				self.prompt_json = json.load(f)['templates']['use_case']
 
 	def extract_node_components(self):
@@ -115,6 +128,7 @@ class UseCase():
 		actor_names = response.choices[0].message.content.split("\n")[1:-1]
 
 		self.nodes = self.generate_node_data(actor_names)
+		self.graph.nodes = self.nodes
 
 	def generate_node_data(self,components):
 			nodes = []
@@ -167,8 +181,3 @@ class UseCase():
 	def generate_edges(actions):
 		pass
 	
-with open("./prompts.json","r+") as f:
-	json_file = json.load(f)
-
-
-inst = Diagram(json_file[0]['prompt'])

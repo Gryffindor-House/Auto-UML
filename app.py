@@ -6,6 +6,9 @@ import json
 # Import Models
 from backend.models import *
 
+# Importing llm module
+from backend.llm import *
+
 # App Route
 app = FastAPI()
 
@@ -33,18 +36,27 @@ def read_root():
 
 # Save Session Record
 @app.post("/save_session")
-async def save_session(session_id:str,session:Session):
+async def save_session(session_id:str,session1:Session):
     try:
-        db.set(session_id,mapping=session.json())
-        #db.set(session_id,str(session.json()))
+
+        sample_text = "Draw a use case diagram for bus management system "
+        print(sample_text)
+        diag_inst = Diagram(sample_text)
+        graph= diag_inst.generate_graph()
+        print(graph)
+
+        session1 = Session(session_id="123",graph=graph)
+
+        db.set(session_id,str(session1.json()))
         return {"status":"ok","message":"session saved successfully","userid":session_id}
-    except:
+    except Exception as e:
         return {"status":"NOK","message":"server error"}
 
 # Load Session
 @app.get("/get_session")
 async def get_session(session_id:str):
     record = db.get(session_id)
+    print(json.loads(record))
     if(record == None):
         return 200,{"error":"Record Not Present"}
     return json.loads(record)

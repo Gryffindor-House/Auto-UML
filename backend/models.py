@@ -36,7 +36,7 @@ class Node(BaseModel):
 class ViewPort(BaseModel):
     x:float
     y:float
-    zoom:int =2
+    zoom:int =1
 
 # Connection Object
 class Edges(BaseModel):
@@ -51,6 +51,7 @@ class Graph(BaseModel):
     nodes:Union[List[Node],None] = []
     edges:Union[List[Edges],None] = None
     viewport:ViewPort
+        
 
 # Session Object
 class Session(BaseModel):
@@ -61,3 +62,7 @@ class User(BaseModel):
     username:str
     password:str="licet@123"
     email_id:str
+
+
+# view_port = ViewPort(x=12.23,y=34.34)
+# graph = Graph(nodes=[],edges=[],viewport=view_port)
