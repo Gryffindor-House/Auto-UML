@@ -40,10 +40,8 @@ async def save_session(session_id:str,session1:Session):
     try:
 
         sample_text = "Draw a use case diagram for bus management system "
-        print(sample_text)
         diag_inst = Diagram(sample_text)
         graph= diag_inst.generate_graph()
-        print(graph)
 
         session1 = Session(session_id="123",graph=graph)
 
