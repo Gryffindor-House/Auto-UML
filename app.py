@@ -38,8 +38,7 @@ def read_root():
 @app.post("/save_session")
 async def save_session(session_id:str,session1:Session):
     try:
-        sample_text = "Draw a use case diagram for bus management system "
-        db.set(session_id,str(session1.model_dump_json()))
+        db.set(session_id,str(session1.json()))
         return {"status":"ok","message":"session saved successfully","userid":session_id}
     except Exception as e:
         print(e)
@@ -55,7 +54,7 @@ async def generate_graph(session_id:str,user_text:str):
         # print(graph)
 
         session1 = Session(session_id=session_id,graph =graph)
-        db.set(session_id,str(session1.model_dump_json()))
+        db.set(session_id,str(session1.json()))
 
         return {"status":"OK","message":"graph generated successfully"}
 
