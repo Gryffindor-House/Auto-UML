@@ -136,12 +136,12 @@ class UseCase():
 		self.nodes = self.generate_node_data(actor_names,"Actor") + self.generate_node_data(usecase_names,"Oval")
 		self.graph.nodes = self.nodes
 
-	def generate_node_data(self,components,type):
+	def generate_node_data(self,components,d_type):
 			nodes = []
 			used_positions = list()
 
 			for actor_name in components:
-					node_id = f"Actor_{uuid.uuid4().hex}"
+					node_id = f"{d_type}_{uuid.uuid4().hex}"
 					
 					# Generate a unique position
 					position = self.generate_unique_position(used_positions)
@@ -156,7 +156,7 @@ class UseCase():
 							"position": position,
 							"positionAbsolute": position,
 							"selected": True,
-							"type": type,
+							"type": d_type,
 							"width": 74
 					}
 

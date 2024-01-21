@@ -20,7 +20,6 @@ origins = [
     "http://127.0.0.1:5173"
 ]
 
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -43,7 +42,6 @@ async def save_session(session_id:str,session1:Session):
     except Exception as e:
         print(e)
         return {"status":"NOK","message":"server error"}
-
 
 # Generate graph
 @app.post("/generate_graph")
