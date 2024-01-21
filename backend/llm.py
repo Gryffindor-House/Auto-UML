@@ -121,16 +121,22 @@ class UseCase():
 				self.prompt_json = json.load(f)['templates']['use_case']
 
 	def extract_node_components(self):
-		response = openai.chat.completions.create(
+		actor_response = openai.chat.completions.create(
 				model="gpt-3.5-turbo",
 				messages=[{"role": "system", "content":self.prompt_json['actors'].format(PROJECT=self.data_obj['problem_statement'])}],
 		)
-		actor_names = response.choices[0].message.content.split("\n")[1:-1]
-
-		self.nodes = self.generate_node_data(actor_names)
+		actor_names = actor_response.choices[0].message.content.split("\n")[1:-1]
+		usecase_response = openai.chat.completions.create(
+				model="gpt-3.5-turbo",
+				messages=[{"role": "system", "content":self.prompt_json['usecases'].format(PROJECT=self.data_obj['problem_statement'])}],
+		)
+		usecase_names = usecase_response.choices[0].message.content.split("\n")[1:-1]
+		# print(actor_names,usecase_names)
+		warnings.warn(str(usecase_names))
+		self.nodes = self.generate_node_data(actor_names,"Actor") + self.generate_node_data(usecase_names,"Oval")
 		self.graph.nodes = self.nodes
 
-	def generate_node_data(self,components):
+	def generate_node_data(self,components,type):
 			nodes = []
 			used_positions = list()
 
@@ -150,7 +156,7 @@ class UseCase():
 							"position": position,
 							"positionAbsolute": position,
 							"selected": True,
-							"type": "Actor",
+							"type": type,
 							"width": 74
 					}
 
