@@ -32,7 +32,7 @@ app.add_middleware(
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
-
+ 
 # Save Session Record
 @app.post("/save_session")
 async def save_session(session_id:str,session1:Session):
@@ -49,7 +49,6 @@ async def generate_graph(session_id:str,user_text:str):
     try:
         diag_inst = Diagram(user_text)
         graph= diag_inst.generate_graph()
-        # print(graph)
 
         session1 = Session(session_id=session_id,graph =graph)
         db.set(session_id,str(session1.json()))
