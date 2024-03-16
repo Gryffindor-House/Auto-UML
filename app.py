@@ -33,7 +33,6 @@ origins = [
     "http://127.0.0.1:5173"
 ]
 
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -85,18 +84,16 @@ class UserLogin(BaseModel):
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
-
+ 
 # Save Session Record
 @app.post("/save_session")
 async def save_session(session_id:str,session1:Session):
     try:
-        sample_text = "Draw a use case diagram for bus management system "
-        db.set(session_id,str(session1.model_dump_json()))
+        db.set(session_id,str(session1.json()))
         return {"status":"ok","message":"session saved successfully","userid":session_id}
     except Exception as e:
         print(e)
         return {"status":"NOK","message":"server error"}
-
 
 # Generate graph
 @app.post("/generate_graph")
@@ -104,10 +101,9 @@ async def generate_graph(session_id:str,user_text:str):
     try:
         diag_inst = Diagram(user_text)
         graph= diag_inst.generate_graph()
-        print(graph)
 
         session1 = Session(session_id=session_id,graph =graph)
-        db.set(session_id,str(session1.model_dump_json()))
+        db.set(session_id,str(session1.json()))
 
         return {"status":"OK","message":"graph generated successfully"}
 
@@ -119,7 +115,7 @@ async def generate_graph(session_id:str,user_text:str):
 @app.get("/get_session")
 async def get_session(session_id:str):
     record = db.get(session_id)
-    print(json.loads(record))
+    # print(json.loads(record))
     if(record == None):
         return 200,{"error":"Record Not Present"}
     return json.loads(record)
