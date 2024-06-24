@@ -122,8 +122,6 @@ class Diagram():
 
 		self.graph = self.class_inst.generate()
 
-
-
 class UseCase():
 	prompt_json = None
 	def __init__(self,data_obj,graph_inst,engine,openai,together):
@@ -156,7 +154,7 @@ class UseCase():
 
 	def extract_node_components(self):
 		if(self.engine == "together"):
-			actor_response = ""
+			actor_response = ""  
 			for m in self.together.stream(self.prompt_json['actors'].format(PROJECT=self.data_obj['problem_statement'])):
 				actor_response += m.content
 			actor_names = actor_response.split("\n")[1:-1]
@@ -164,8 +162,6 @@ class UseCase():
 			for m in self.together.stream(self.prompt_json['usecases'].format(PROJECT=self.data_obj['problem_statement'])):
 				usecase_response += m.content
 			usecase_names = usecase_response.split("\n")[1:-1]
-			print("usecase names")
-			print(usecase_names)
 		
 		elif(self.engine == "openai"):
 			actor_response = self.openai.chat.completions.create(
@@ -178,8 +174,11 @@ class UseCase():
 					messages=[{"role": "system", "content":self.prompt_json['usecases'].format(PROJECT=self.data_obj['problem_statement'])}],
 			)
 			usecase_names = usecase_response.choices[0].message.content.split("\n")[1:-1]
-			# print(actor_names,usecase_names)
 			warnings.warn(str(usecase_names))
+
+		# Filter out empty strings
+		actor_names = list(filter(lambda x:x.strip() != "",actor_names))
+		usecase_names = list(filter(lambda x:x.strip() != "",usecase_names))
 
 		self.nodes = self.generate_node_data(actor_names,"Actor") + self.generate_node_data(usecase_names,"Oval")
 		self.graph.nodes = self.nodes
