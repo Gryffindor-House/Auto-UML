@@ -9,6 +9,7 @@ import re
 load_dotenv()
 
 from openai import OpenAI
+from langchain_together import ChatTogether
 
 import nltk
 from nltk.corpus import stopwords
@@ -17,8 +18,6 @@ import json
 import warnings
 
 from backend.models import *
-
-openai = OpenAI(api_key=os.getenv("OPEN_AI_KEY"))
 
 # Download Corpus
 nltk.download('stopwords')
@@ -31,9 +30,14 @@ class Diagram():
 	# Prompt Json
 	prompt_json = {}
 
+	# Engines
+	openai = None
+	together = None
+
+	together_model = "meta-llama/Llama-3-70b-chat-hf"
 	# Diagram 
 
-	def __init__(self,user_text):
+	def __init__(self,user_text,engine="together"):
 		self.raw_text = user_text
 
 		# Load Prompts
@@ -42,6 +46,12 @@ class Diagram():
 		# Generate Graph Instance
 		self.graph = Graph(nodes=[],edges=[],viewport=ViewPort(x=302.8159235862322, y=-94.66986803311238))
 
+		self.engine = 	engine
+
+		if(self.engine == "openai"):
+			self.openai = OpenAI(api_key=os.getenv("OPEN_AI_KEY"))
+		else:
+			self.together = ChatTogether(together_api_key=os.getenv("TOGETHER_API_KEY"),model=self.together_model)
 
 	def generate_graph(self):
 		self.generate_data_obj()
@@ -64,12 +74,20 @@ class Diagram():
 		text_words = list(self.text.split(" "))
 		text_words  = list(filter(lambda x:x not in stopwords.words('english'),text_words))
 
-		# Fetching Name of the UML Diagram
-		response = openai.chat.completions.create(
-				model="gpt-3.5-turbo-1106",
-				messages=[{"role": "system", "content":self.prompt_json['templates']['common']['uml_diagram'].format(USERPROMPT=self.text)}],
-		)
-		response = response.choices[0].message.content.lower()
+		if(self.engine == "together"):
+			response = ""
+			for m in self.together.stream(self.prompt_json['templates']['common']['uml_diagram'].format(USERPROMPT=self.text)):
+				response += m.content
+			
+		elif(self.engine == "openai"):
+			# Fetching Name of the UML Diagram
+			response = self.openai.chat.completions.create(
+					model="gpt-3.5-turbo-1106",
+					messages=[{"role": "system", "content":self.prompt_json['templates']['common']['uml_diagram'].format(USERPROMPT=self.text)}],
+			)
+			response = response.choices[0].message.content
+
+		response = response.lower()
 
 		for key,value in self.prompt_json['diagrams'].items():
 			if response in value["synonyms"]:
@@ -77,11 +95,18 @@ class Diagram():
 				break
 
 	def fetch_problem_statement(self):
-		response = openai.chat.completions.create(
-				model="gpt-3.5-turbo-1106",
-				messages=[{"role": "system", "content":self.prompt_json['templates']['common']['problem_statement'].format(USERPROMPT=self.text)}],
-		)
-		self.data_obj['problem_statement'] = response.choices[0].message.content
+		if(self.engine == "together"):
+			response = ""
+			for m in self.together.stream(self.prompt_json['templates']['common']['problem_statement'].format(USERPROMPT=self.text)):
+				response += m.content
+			self.data_obj['problem_statement'] = response
+
+		elif(self.engine == "openai"):
+			response = self.openai.chat.completions.create(
+					model="gpt-3.5-turbo-1106",
+					messages=[{"role": "system", "content":self.prompt_json['templates']['common']['problem_statement'].format(USERPROMPT=self.text)}],
+			)
+			self.data_obj['problem_statement'] = response.choices[0].message.content
 
 	def generate_data_obj(self):
 		
@@ -93,7 +118,7 @@ class Diagram():
 
 		# Assign Class Instance
 		if(self.data_obj['uml_diagram'] == 'use_case' ):
-			self.class_inst = UseCase(self.data_obj,self.graph)
+			self.class_inst = UseCase(self.data_obj,self.graph,engine=self.engine,openai=self.openai,together=self.together)
 
 		self.graph = self.class_inst.generate()
 
@@ -101,12 +126,21 @@ class Diagram():
 
 class UseCase():
 	prompt_json = None
-	def __init__(self,data_obj,graph_inst):
+	def __init__(self,data_obj,graph_inst,engine,openai,together):
 		# Assignment data object
 		self.data_obj = data_obj
 
 		# Assignment of Graph Instance
 		self.graph = graph_inst
+
+		# Assignment of Engine
+		self.engine = engine
+
+		# Assignment of OpenAI
+		self.openai = openai
+
+		# Assignment of Together
+		self.together = together
 
 		# Load prompts
 		self.load_prompts()
@@ -121,18 +155,32 @@ class UseCase():
 				self.prompt_json = json.load(f)['templates']['use_case']
 
 	def extract_node_components(self):
-		actor_response = openai.chat.completions.create(
-				model="gpt-3.5-turbo-1106",
-				messages=[{"role": "system", "content":self.prompt_json['actors'].format(PROJECT=self.data_obj['problem_statement'])}],
-		)
-		actor_names = actor_response.choices[0].message.content.split("\n")[1:-1]
-		usecase_response = openai.chat.completions.create(
-				model="gpt-3.5-turbo-1106",
-				messages=[{"role": "system", "content":self.prompt_json['usecases'].format(PROJECT=self.data_obj['problem_statement'])}],
-		)
-		usecase_names = usecase_response.choices[0].message.content.split("\n")[1:-1]
-		# print(actor_names,usecase_names)
-		warnings.warn(str(usecase_names))
+		if(self.engine == "together"):
+			actor_response = ""
+			for m in self.together.stream(self.prompt_json['actors'].format(PROJECT=self.data_obj['problem_statement'])):
+				actor_response += m.content
+			actor_names = actor_response.split("\n")[1:-1]
+			usecase_response = ""
+			for m in self.together.stream(self.prompt_json['usecases'].format(PROJECT=self.data_obj['problem_statement'])):
+				usecase_response += m.content
+			usecase_names = usecase_response.split("\n")[1:-1]
+			print("usecase names")
+			print(usecase_names)
+		
+		elif(self.engine == "openai"):
+			actor_response = self.openai.chat.completions.create(
+					model="gpt-3.5-turbo-1106",
+					messages=[{"role": "system", "content":self.prompt_json['actors'].format(PROJECT=self.data_obj['problem_statement'])}],
+			)
+			actor_names = actor_response.choices[0].message.content.split("\n")[1:-1]
+			usecase_response = self.openai.chat.completions.create(
+					model="gpt-3.5-turbo-1106",
+					messages=[{"role": "system", "content":self.prompt_json['usecases'].format(PROJECT=self.data_obj['problem_statement'])}],
+			)
+			usecase_names = usecase_response.choices[0].message.content.split("\n")[1:-1]
+			# print(actor_names,usecase_names)
+			warnings.warn(str(usecase_names))
+
 		self.nodes = self.generate_node_data(actor_names,"Actor") + self.generate_node_data(usecase_names,"Oval")
 		self.graph.nodes = self.nodes
 
@@ -182,7 +230,6 @@ class UseCase():
 									used_positions.append(position)
 									return position
 					
-
 	def generate_edges(actions):
 		pass
 	

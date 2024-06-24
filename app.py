@@ -41,44 +41,42 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-#Connecting to PostgreSQL database
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False,autoflush=False,bind=engine)
-def get_session():
-    session = SessionLocal()
-    try:
-        yield session
-    finally:
-        session.close()
+# #Connecting to PostgreSQL database
+# SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
+# engine = create_engine(SQLALCHEMY_DATABASE_URL)
+# SessionLocal = sessionmaker(autocommit=False,autoflush=False,bind=engine)
+# def get_session():
+#     session = SessionLocal()
+#     try:
+#         yield session
+#     finally:
+#         session.close()
 
 
-#Define SQLAlchemyBase
-Base = declarative_base()
+# #Define SQLAlchemyBase
+# Base = declarative_base()
 
-#User model
-class User_db(Base):
-    __tablename__ = "users"
-    #id = Column(Integer,primary_key=True,index=True)
-    email_id = Column(String,primary_key=True)
-    password = Column(String)
+# #User model
+# class User_db(Base):
+#     __tablename__ = "users"
+#     #id = Column(Integer,primary_key=True,index=True)
+#     email_id = Column(String,primary_key=True)
+#     password = Column(String)
 
-#Create the table
-Base.metadata.create_all(bind=engine)
+# #Create the table
+# Base.metadata.create_all(bind=engine)
 
-#Hiding the password
-pwd_context = CryptContext(schemes=["bcrypt"],deprecated="auto")
+# #Hiding the password
+# pwd_context = CryptContext(schemes=["bcrypt"],deprecated="auto")
 
-#Pydantic model for user
-class UserCreate(BaseModel):
-    email_id: str
-    password: str
+# #Pydantic model for user
+# class UserCreate(BaseModel):
+#     email_id: str
+#     password: str
 
-class UserLogin(BaseModel):
-    email_id: str
-    password: str
-
-
+# class UserLogin(BaseModel):
+#     email_id: str
+#     password: str
 
 # Dummy Route
 @app.get("/")
@@ -142,22 +140,22 @@ async def delete_record(session_id:str):
 #     return 400,{"msg":'credentials not valid',"code":200}
 
 #Routes_AB
-@app.post("/register")
-async def register_user(user: UserCreate):
-    db_user = SessionLocal()
-    hashed_password = pwd_context.hash(user.password)
-    user_record = User_db(email_id=user.email_id,password=hashed_password)
-    db_user.add(user_record)
-    db_user.commit()
-    db_user.refresh(db_user)
-    return {"Message":"User registered successfully"}
+# @app.post("/register")
+# async def register_user(user: UserCreate):
+#     db_user = SessionLocal()
+#     hashed_password = pwd_context.hash(user.password)
+#     user_record = User_db(email_id=user.email_id,password=hashed_password)
+#     db_user.add(user_record)
+#     db_user.commit()
+#     db_user.refresh(db_user)
+#     return {"Message":"User registered successfully"}
 
-@app.post("/Authenticate")
-async def authenticate_user(user: UserLogin):
-    db_user = SessionLocal()
-    result = db_user.query(User_db).filter(User_db.email_id == user.email_id).first()
-    if result is None:
-        return {"Message":"User not found"}
-    if not pwd_context.verify(user.password,result.password):
-        return {"Message":"Incorrect password"}
-    return {"Message":"Login successful"}
+# @app.post("/Authenticate")
+# async def authenticate_user(user: UserLogin):
+#     db_user = SessionLocal()
+#     result = db_user.query(User_db).filter(User_db.email_id == user.email_id).first()
+#     if result is None:
+#         return {"Message":"User not found"}
+#     if not pwd_context.verify(user.password,result.password):
+#         return {"Message":"Incorrect password"}
+#     return {"Message":"Login successful"}
