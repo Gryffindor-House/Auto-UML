@@ -199,8 +199,8 @@ class UseCase():
 			print(edge)
 			edge_data = {
 				"id": f"Edge_{uuid.uuid4().hex}",
-				"source": edge[0].strip('\n').strip().lower().replace(" ","_"),
-				"target": edge[1].strip('\n').strip().lower().replace(" ","_"),
+				"source": re.sub(r'[^a-zA-Z]', '', edge[0]).lower(),
+				"target": re.sub(r'[^a-zA-Z]', '', edge[1]).lower(),
 			}
 			edges.append(edge_data)
 		return edges
@@ -211,7 +211,9 @@ class UseCase():
 
 			for actor_name in components:
 					# Generate a unique node ID
-					node_id = actor_name.lower().replace(" ", "_")
+
+					# Remove special characters and numbers in the actor name
+					node_id = re.sub(r'[^a-zA-Z]', '', actor_name).lower()
 					print(f'Node ID: {node_id}')
 					
 					# Generate a unique position
