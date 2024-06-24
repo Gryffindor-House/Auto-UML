@@ -6,7 +6,7 @@
     },
     "use_case": {
       "actors": "Give me just the names of actors alone for use case of {PROJECT} for UML diagram. only the actors for the uml diagram",
-      "usecases" : "generate just label of use cases without description for Use case diagram of a {PROJECT} application"
+      "usecases": "generate just label of use cases without description for Use case diagram of a {PROJECT} application"
     },
     "activity": {
       "actors": "Give me just the names of actors alone for activity diagram of {PROJECT} for UML diagram"
