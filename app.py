@@ -1,19 +1,11 @@
 import os
-
 from dotenv import load_dotenv
-load_dotenv()
-
+import redis
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.redis_db import *
 import json
-from pydantic import BaseModel
-from sqlalchemy import create_engine,Column,Integer,String
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
 from passlib.context import CryptContext
-from sqlalchemy.orm import Session
-from typing import List,Union
 from fastapi import Depends
 
 # Import Models
@@ -41,58 +33,48 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-#Connecting to PostgreSQL database
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False,autoflush=False,bind=engine)
-def get_session():
-    session = SessionLocal()
-    try:
-        yield session
-    finally:
-        session.close()
+#Connecting to Redis database
+redis_host = os.getenv("REDIS_HOST")
+redis_port = os.getenv("REDIS_PORT")
+redis_password = os.getenv("REDIS_PASSWORD")
+redis_db = redis.Redis(host=redis_host, port=redis_port, password=redis_password, decode_responses=True)
 
-
-#Define SQLAlchemyBase
-Base = declarative_base()
-
-#User model
-class User_db(Base):
-    __tablename__ = "users"
-    #id = Column(Integer,primary_key=True,index=True)
-    email_id = Column(String,primary_key=True)
-    password = Column(String)
-
-#Create the table
-Base.metadata.create_all(bind=engine)
-
-#Hiding the password
 pwd_context = CryptContext(schemes=["bcrypt"],deprecated="auto")
-
-#Pydantic model for user
-class UserCreate(BaseModel):
-    email_id: str
-    password: str
-
-class UserLogin(BaseModel):
-    email_id: str
-    password: str
-
-
 
 # Dummy Route
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
+
+#Register User
+@app.post("/register")
+async def register_user(email_id: str, password: str):
+    if redis_db.exists(email_id):
+        return {"Message":"User already exists"}
+    
+    hashed_password = pwd_context.hash(password)
+    redis_db.hset(email_id, "password", hashed_password)
+    return {"Message":"User registered successfully"}
+
+#Authenticate User
+@app.post("/authenticate")
+async def authenticate_user(email_id: str, password: str):
+    if not redis_db.exists(email_id):
+         raise {"Message":"User does not exist"}
+    
+    stored_password = redis_db.hget(email_id, "password")
+    if not pwd_context.verify(password, stored_password):
+        return {"Message":"Incorrect password"}
+    
+    return {"Message":"Login successful"}
  
 # Save Session Record
 @app.post("/save_session")
-async def save_session(session_id:str,session1:Session):
+async def save_session(session_id:str,session_data: dict):
     try:
-        db.set(session_id,str(session1.json()))
+        db.set(session_id, json.dumps(session_data))
         return {"status":"ok","message":"session saved successfully","userid":session_id}
     except Exception as e:
-        print(e)
         return {"status":"NOK","message":"server error"}
 
 # Generate graph
@@ -141,23 +123,24 @@ async def delete_record(session_id:str):
 #         return 400,{"msg":"authenticate success"}
 #     return 400,{"msg":'credentials not valid',"code":200}
 
-#Routes_AB
-@app.post("/register")
-async def register_user(user: UserCreate):
-    db_user = SessionLocal()
-    hashed_password = pwd_context.hash(user.password)
-    user_record = User_db(email_id=user.email_id,password=hashed_password)
-    db_user.add(user_record)
-    db_user.commit()
-    db_user.refresh(db_user)
-    return {"Message":"User registered successfully"}
+# #Routes_AB
+# @app.post("/register")
+# async def register_user(user: UserCreate):
+#     if redis_db.exists(user.email_id):
+#         return {"Message":"User already exists"}
+    
+#     hashed_password = pwd_context.hash(user.password)
+#     redis_db.hset(user.email_id, "password", hashed_password)
+#     return {"Message":"User registered successfully"}
 
-@app.post("/Authenticate")
-async def authenticate_user(user: UserLogin):
-    db_user = SessionLocal()
-    result = db_user.query(User_db).filter(User_db.email_id == user.email_id).first()
-    if result is None:
-        return {"Message":"User not found"}
-    if not pwd_context.verify(user.password,result.password):
-        return {"Message":"Incorrect password"}
-    return {"Message":"Login successful"}
+
+# @app.post("/Authenticate")
+# async def authenticate_user(user: UserLogin):
+#     if not redis_db.exists(user.email_id):
+#         return {"Message":"User does not exist"}
+    
+#     stored_password = redis_db.hget(user.email_id, "password")
+#     if not pwd_context.verify(user.password, stored_password):
+#         return {"Message":"Incorrect password"}
+    
+#     return {"Message":"Login successful"}
