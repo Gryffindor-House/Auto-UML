@@ -42,9 +42,9 @@ class ViewPort(BaseModel):
 class Edges(BaseModel):
     id:str
     source:str
-    sourceHandle:str
+    sourceHandle:Union[str,None] = None
     target:str
-    targetHandle:str
+    targetHandle:Union[str,None] = None
 
 # Graph Object
 class Graph(BaseModel):

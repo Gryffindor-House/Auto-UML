@@ -7,7 +7,7 @@
     "use_case": {
       "actors": "Give me just the names of actors alone for use case of {PROJECT} for UML diagram. only the actors for the uml diagram",
       "usecases": "generate just label of use cases without description for Use case diagram of a {PROJECT} application",
-      "edges": "You are an UML Generater for usecase diagram. This is problem statement {PROJECT} and here are the usecases {USECASES} and the actors {ACTORS}. Please generate the edges for the usecase diagram in the format USECASE1 -> USECASE2 and ACTOR -> USECASE. Each edge must be comma seperated"
+      "edges": "You are an UML Generater for usecase diagram. This is problem statement {PROJECT} and here are the usecases {USECASES} and the actors {ACTORS}. Please generate the edges for the usecase diagram in the format USECASE1 -> USECASE2 and ACTOR -> USECASE. Each edge must be comma seperated. Remember I dont need any explanation I just need the edges"
     },
     "activity": {
       "actors": "Give me just the names of actors alone for activity diagram of {PROJECT} for UML diagram"

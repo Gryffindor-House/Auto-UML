@@ -181,7 +181,6 @@ class UseCase():
 		actor_names = list(filter(lambda x:x.strip() != "",actor_names))
 		usecase_names = list(filter(lambda x:x.strip() != "",usecase_names))
 
-
 		if(self.engine == "together"):
 			edges_text = ""
 			for m in self.together.stream(self.prompt_json['edges'].format(PROJECT=self.data_obj['problem_statement'],ACTORS=actor_names,USECASES=usecase_names)):
@@ -195,15 +194,13 @@ class UseCase():
 	def generate_edges(self,edges_text):
 		# Generate Edges
 		edges = []
-		print(edges_text)
 		for edge in edges_text:
 			edge = edge.split("->")
+			print(edge)
 			edge_data = {
 				"id": f"Edge_{uuid.uuid4().hex}",
-				"source": edge[0].strip().lower().replace(" ","_"),
-				"sourceHandle": "right",
-				"target": edge[1].strip().lower().replace(" ","_"),
-				"targetHandle": "left"
+				"source": edge[0].strip('\n').strip().lower().replace(" ","_"),
+				"target": edge[1].strip('\n').strip().lower().replace(" ","_"),
 			}
 			edges.append(edge_data)
 		return edges
@@ -215,6 +212,7 @@ class UseCase():
 			for actor_name in components:
 					# Generate a unique node ID
 					node_id = actor_name.lower().replace(" ", "_")
+					print(f'Node ID: {node_id}')
 					
 					# Generate a unique position
 					position = self.generate_unique_position(used_positions)
@@ -254,7 +252,3 @@ class UseCase():
 							if not too_close:
 									used_positions.append(position)
 									return position
-					
-	def generate_edges(actions):
-		pass
-	
