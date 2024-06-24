@@ -174,21 +174,47 @@ class UseCase():
 					messages=[{"role": "system", "content":self.prompt_json['usecases'].format(PROJECT=self.data_obj['problem_statement'])}],
 			)
 			usecase_names = usecase_response.choices[0].message.content.split("\n")[1:-1]
-			warnings.warn(str(usecase_names))
+
+			
 
 		# Filter out empty strings
 		actor_names = list(filter(lambda x:x.strip() != "",actor_names))
 		usecase_names = list(filter(lambda x:x.strip() != "",usecase_names))
 
+
+		if(self.engine == "together"):
+			edges_text = ""
+			for m in self.together.stream(self.prompt_json['edges'].format(PROJECT=self.data_obj['problem_statement'],ACTORS=actor_names,USECASES=usecase_names)):
+				edges_text += m.content
+			edges_text = edges_text.split(",")[1:-1]
+
+		self.graph.edges = self.generate_edges(edges_text)
 		self.nodes = self.generate_node_data(actor_names,"Actor") + self.generate_node_data(usecase_names,"Oval")
 		self.graph.nodes = self.nodes
+
+	def generate_edges(self,edges_text):
+		# Generate Edges
+		edges = []
+		print(edges_text)
+		for edge in edges_text:
+			edge = edge.split("->")
+			edge_data = {
+				"id": f"Edge_{uuid.uuid4().hex}",
+				"source": edge[0].strip().lower().replace(" ","_"),
+				"sourceHandle": "right",
+				"target": edge[1].strip().lower().replace(" ","_"),
+				"targetHandle": "left"
+			}
+			edges.append(edge_data)
+		return edges
 
 	def generate_node_data(self,components,d_type):
 			nodes = []
 			used_positions = list()
 
 			for actor_name in components:
-					node_id = f"{d_type}_{uuid.uuid4().hex}"
+					# Generate a unique node ID
+					node_id = actor_name.lower().replace(" ", "_")
 					
 					# Generate a unique position
 					position = self.generate_unique_position(used_positions)
