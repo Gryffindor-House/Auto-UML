@@ -153,6 +153,8 @@ class UseCase():
 				self.prompt_json = json.load(f)['templates']['use_case']
 
 	def extract_node_components(self):
+		used_positions = []
+
 		if(self.engine == "together"):
 			actor_response = ""  
 			for m in self.together.stream(self.prompt_json['actors'].format(PROJECT=self.data_obj['problem_statement'])):
@@ -188,8 +190,12 @@ class UseCase():
 			edges_text = edges_text.split(",")[1:-1]
 
 		self.graph.edges = self.generate_edges(edges_text)
-		self.nodes = self.generate_node_data(actor_names,"Actor") + self.generate_node_data(usecase_names,"Oval")
-		self.graph.nodes = self.nodes
+		# self.nodes = self.generate_node_data(actor_names,"Actor") + self.generate_node_data(usecase_names,"Oval")
+		actor_nodes, used_positions = self.generate_node_data(actor_names,"Actor",used_positions)
+		usecase_nodes, used_positions = self.generate_node_data(usecase_names,"Oval",used_positions)
+		self.graph.nodes = actor_nodes + usecase_nodes
+		
+		
 
 	def generate_edges(self,edges_text):
 		# Generate Edges
@@ -204,53 +210,102 @@ class UseCase():
 			}
 			edges.append(edge_data)
 		return edges
+	
+	def generate_node_data(self, components, d_type, used_positions):
+		nodes = []
 
-	def generate_node_data(self,components,d_type):
-			nodes = []
-			used_positions = list()
+		for component_name in components:
+			node_id = re.sub(r'[^a-zA-Z]', '', component_name).lower()
+			
+			position = self.generate_unique_position(used_positions)
 
-			for actor_name in components:
-					# Generate a unique node ID
+			node_data = {
+				"id": node_id,
+				"data": {"label": component_name},
+				"position": position,
+				"type": d_type
+			}
+			nodes.append(node_data)
+			used_positions.append(position)
+		return nodes, used_positions
 
-					# Remove special characters and numbers in the actor name
-					node_id = re.sub(r'[^a-zA-Z]', '', actor_name).lower()
-					print(f'Node ID: {node_id}')
+
+	# def generate_node_data(self,components,d_type,):
+	# 		nodes = []
+	# 		used_positions = list()
+
+	# 		for actor_name in components:
+	# 				# Generate a unique node ID
+
+	# 				# Remove special characters and numbers in the actor name
+	# 				node_id = re.sub(r'[^a-zA-Z]', '', actor_name).lower()
+	# 				print(f'Node ID: {node_id}')
 					
-					# Generate a unique position
-					position = self.generate_unique_position(used_positions)
+	# 				# Generate a unique position
+	# 				position = self.generate_unique_position(used_positions)
 
-					node_data = {
-							"id": node_id,
-							"dragging": False,
-							"height": 130,
-							"data": {
-									"label": actor_name
-							},
-							"position": position,
-							"positionAbsolute": position,
-							"selected": True,
-							"type": d_type,
-							"width": 74
-					}
+	# 				node_data = {
+	# 						"id": node_id,
+	# 						"dragging": False,
+	# 						"height": 130,
+	# 						"data": {
+	# 								"label": actor_name
+	# 						},
+	# 						"position": position,
+	# 						"positionAbsolute": position,
+	# 						"selected": True,
+	# 						"type": d_type,
+	# 						"width": 74
+	# 				}
 
-					nodes.append(node_data)
+	# 				nodes.append(node_data)
 
-			return nodes
+	# 		return nodes
+	
+	def generate_unique_position(self, used_positions, viewport_width=3000, viewport_height=2000, min_distance=150):
+		"""
+		Generate a random position, ensuring it's unique and spaced adequately apart from existing positions.
+		"""
+		attempts = 0
+		while attempts < 100:  # Limit the number of attempts to avoid infinite loops
+			position = {
+				"x": random.uniform(0, viewport_width),
+				"y": random.uniform(0, viewport_height)
+			}
 
-	def generate_unique_position(self,used_positions, viewport_width=100, viewport_height=100, min_distance=10):
-			# Generate a random position, ensuring it's unique, within the viewport, and not too far from existing positions
-			while True:
-					position = {"x": random.uniform(0, viewport_width), "y": random.uniform(0, viewport_height)}
+			# Check if the position is too close to existing positions
+			if not any(
+				abs(position["x"] - existing["x"]) < min_distance and
+				abs(position["y"] - existing["y"]) < min_distance
+				for existing in used_positions
+			):
+				used_positions.append(position)
+				return position
+			attempts += 1
 
-					# Check if the position is within the viewport
-					if 0 <= position["x"] <= viewport_width and 0 <= position["y"] <= viewport_height:
-							# Check if the position is not too close to existing positions
-							too_close = any(
-									abs(position["x"] - existing["x"]) < min_distance and
-									abs(position["y"] - existing["y"]) < min_distance
-									for existing in used_positions
-							)
+		# If a unique position isn't found, adjust the last known position slightly
+		if used_positions:
+			last_position = used_positions[-1]
+			return {"x": last_position["x"] + min_distance, "y": last_position["y"] + min_distance}
+		else:
+			# Default to the center if no positions are used yet
+			return {"x": viewport_width / 2, "y": viewport_height / 2}
 
-							if not too_close:
-									used_positions.append(position)
-									return position
+
+	# def generate_unique_position(self,used_positions, viewport_width=100, viewport_height=100, min_distance=10):
+	# 		# Generate a random position, ensuring it's unique, within the viewport, and not too far from existing positions
+	# 		while True:
+	# 				position = {"x": random.uniform(0, viewport_width), "y": random.uniform(0, viewport_height)}
+
+	# 				# Check if the position is within the viewport
+	# 				if 0 <= position["x"] <= viewport_width and 0 <= position["y"] <= viewport_height:
+	# 						# Check if the position is not too close to existing positions
+	# 						too_close = any(
+	# 								abs(position["x"] - existing["x"]) < min_distance and
+	# 								abs(position["y"] - existing["y"]) < min_distance
+	# 								for existing in used_positions
+	# 						)
+
+	# 						if not too_close:
+	# 								used_positions.append(position)
+	# 								return position
