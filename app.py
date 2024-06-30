@@ -85,9 +85,10 @@ async def generate_graph(session_id:str,user_text:str):
         graph= diag_inst.generate_graph()
 
         session1 = Session(session_id=session_id,graph =graph)
-        db.set(session_id,str(session1.json()))
+        # print(session1.json())
+        # db.set(session_id,str(session1.json()))
 
-        return {"status":"OK","message":"graph generated successfully"}
+        return json.loads(session1.json())
 
     except Exception as e:
         print(e)
